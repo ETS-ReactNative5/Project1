@@ -1,6 +1,7 @@
 import React, {Component, useEffect, useState} from 'react';
 import TextRecognition from 'react-native-text-recognition';
 import {
+  Alert,
   SafeAreaView,
   StyleSheet,
   View,
@@ -13,6 +14,7 @@ import LanguagePicker from './LanguagePicker';
 import LanguageButton from './LanguageButton';
 import translate from 'translate-google-api';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
+
 const windowHeight = Dimensions.get('window').height;
 
 export default function Main(){
@@ -22,10 +24,22 @@ export default function Main(){
     const [fromLang, setFromLang] = useState();
 
     const [toText, setToText] = useState();
+    const [isFocusedTo, setIsFocusedTo] = useState(false);
     const [isEditingTo, setIsEditingTo] = useState(false);
     const [toLang, setToLang] = useState();
 
     const [image, setImage] = useState(null);
+
+    const noLanguageSelected = () => {
+      Alert.alert(
+        "No Language",
+        "Please select the language in the bottom box.",
+        [
+          { style: "cancel", text: "dismiss", onPress: () => {}}
+        ],
+        { cancelable: true },
+      );
+    }
 
     useEffect(() => {
       async function fetchText() {
@@ -48,6 +62,7 @@ export default function Main(){
         isEditing={isEditingFrom}
         setIsEditingLang={setIsEditingFrom}
       />
+       { isFocusedTo ? <View style={{marginBottom: 10}}></View> :
       <View style={{ ...styles.box, borderColor: 'blue' }}>
         {isEditingFrom == true ? (
           <LanguagePicker
@@ -59,8 +74,23 @@ export default function Main(){
             <TouchableOpacity
               style={styles.cameraButton}
               onPress={async () => {
-                var image = await launchImageLibrary({}, setImage);
-                //var image = await launchCamera({});
+                var image = null;
+                Alert.alert(
+                  "Camera or Library",
+                  "Select Photos from Library or Take Photo with Camera?",
+                  [
+                    {
+                      text: "Select Photo",
+                      onPress: async() => image = await launchImageLibrary({}, setImage)
+                    },
+                    {
+                      text: "Use Camera",
+                      onPress: async() => image = await launchCamera({}, setImage)
+                    },
+                    { style: "cancel", text: "cancel", onPress: () => console.log("cancel") }
+                  ],
+                  { cancelable: true },
+                );
               }}
             >
               <Image
@@ -72,13 +102,15 @@ export default function Main(){
               style={styles.textBox}
               value={fromText}
               multiline={true}
-              clearButtonMode="while-editing"
-              autoFocus={true}
               returnKeyType="go"
               placeholder="type here..."
               onChangeText={setFromText}
-              onEndEditing={async () => {
-                if (toLang == null) return;
+              blurOnSubmit={true}
+              onSubmitEditing={async () => {
+                if (toLang == null){
+                  noLanguageSelected();
+                  return;
+                }
 
                 await translate(fromText, {
                   tld: fromLang == null ? '' : fromLang.code,
@@ -95,6 +127,7 @@ export default function Main(){
           </View>
         )}
       </View>
+    }
       <LanguageButton
         buttonColor={'green'}
         placeHolder={'select language'}
@@ -116,17 +149,29 @@ export default function Main(){
             returnKeyType="go"
             placeholder="or type here...."
             onChangeText={setToText}
-            onEndEditing={async () => {
-              if (fromLang == null) return;
-              await translate(toText, {
-                tld: toLang == null ? '' : toLang.code,
-                to: fromLang.code,
+            returnKeyType="go"
+            blurOnSubmit={true}
+            onFocus={()=>{
+                setIsFocusedTo(true);
+            }}
+            onBlur={()=>{
+              setIsFocusedTo(false);
+            }}
+            onSubmitEditing={async () => {
+              if (toLang == null){
+                noLanguageSelected();
+                return;
+              }
+
+              await translate(fromText, {
+                tld: fromLang == null ? '' : fromLang.code,
+                to: toLang.code,
               })
                 .then((value) => {
-                  setFromText(value[0]);
+                  setToText(value[0]);
                 })
                 .catch((e) => {
-                  setFromText('sorry, error');
+                  setToText('sorry, error');
                 });
             }}
           />
@@ -156,13 +201,14 @@ const styles = StyleSheet.create({
   },
   cameraButton: {
     flex: 1,
-    width: 40,
+    width: 35,
+    height: 40,
   },
   cameraIcon: {
     alignSelf: 'center',
-    height: 40,
-    width: 40,
-    opacity: 0.5,
+    height: 35,
+    width: 35,
+    opacity: 0.3,
   },
   textBox: {
     textAlignVertical: 'top',
