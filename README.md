@@ -94,6 +94,7 @@ In your command line, clone and run your project
 git clone <your project site>
 
 # Go into the repo
+cd <project name>
 
 # Start the project
 npx react-native start
