@@ -1,5 +1,4 @@
 import React, {Component, useEffect, useState} from 'react';
-import TextRecognition from 'react-native-text-recognition';
 import {
   Alert,
   SafeAreaView,
@@ -7,13 +6,18 @@ import {
   View,
   TextInput,
   TouchableOpacity,
+  ActivityIndicator,
   Image,
+  Platform,
   Dimensions,
 } from 'react-native';
 import LanguagePicker from './LanguagePicker';
 import LanguageButton from './LanguageButton';
+
 import translate from 'translate-google-api';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
+import TextRecognition from 'react-native-text-recognition';
+import { InterstitialAdManager, AdSettings } from 'react-native-fbads';
 
 const windowHeight = Dimensions.get('window').height;
 
@@ -40,7 +44,17 @@ export default function Main(){
         { cancelable: true },
       );
     }
-
+    const interstitialId = Platform.OS === 'ios' ? "662530228288377_662556258285774" : "662530228288377_662594761615257";
+    const runAdTimer = () => {
+      setTimeout(() => {
+      console.log('requesting ad');
+      InterstitialAdManager.showAd(interstitialId)
+      .then(didClose => {runAdTimer();})
+      .catch(error => {runAdTimer();});
+      }, 120000); //2 minutes
+    };
+    runAdTimer();
+    
     useEffect(() => {
       async function fetchText() {
           var result = await TextRecognition.recognize(image.assets[0].uri);
@@ -55,6 +69,7 @@ export default function Main(){
 
   return (
     <SafeAreaView style={styles.container}>
+      <ActivityIndicator size="large" color="black" />
       <LanguageButton
         buttonColor={'blue'}
         placeHolder={'Detect Language'}

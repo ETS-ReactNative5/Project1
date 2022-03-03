@@ -12,6 +12,8 @@ target 'Project1' do
     :hermes_enabled => false
   )
 
+  pod 'ReactNativeAdsFacebook', :path => '../node_modules/react-native-fbads'
+
   target 'Project1Tests' do
     inherit! :complete
     # Pods for testing
