@@ -18,12 +18,14 @@ import translate from 'translate-google-api';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import TextRecognition from 'react-native-text-recognition';
 import { InterstitialAdManager, AdSettings } from 'react-native-fbads';
+//import NetInfo from "@react-native-community/netinfo";
 
 const windowHeight = Dimensions.get('window').height;
 
 export default function Main(){
 
     const [fromText, setFromText] = useState();
+    const [isFocusedFrom, setIsFocusedFrom] = useState(false);
     const [isEditingFrom, setIsEditingFrom] = useState(false);
     const [fromLang, setFromLang] = useState();
 
@@ -32,12 +34,40 @@ export default function Main(){
     const [isEditingTo, setIsEditingTo] = useState(false);
     const [toLang, setToLang] = useState();
 
-    const [image, setImage] = useState(null);
+    const [imageFrom, setImageFrom] = useState(null);
+    const [imageTo, setImageTo] = useState(null);
+    
+    const isConnectedToNetwork = async () => {
+      //const response = await NetInfo.fetch();
+      //return response.isConnected;
+      return true;
+    }
+
+    const noNetworkConnected = () => {
+      Alert.alert(
+        "Error",
+        "Please connect to a network.",
+        [
+          { style: "cancel", text: "dismiss", onPress: () => {}}
+        ],
+        { cancelable: true },
+      );
+    }
 
     const noLanguageSelected = () => {
       Alert.alert(
         "No Language",
-        "Please select the language in the bottom box.",
+        "Please select a language to translate from and to.",
+        [
+          { style: "cancel", text: "dismiss", onPress: () => {}}
+        ],
+        { cancelable: true },
+      );
+    }
+    const errorOnInput = () => {
+      Alert.alert(
+        "Error",
+        "Are you sure that this request is valid?",
         [
           { style: "cancel", text: "dismiss", onPress: () => {}}
         ],
@@ -47,7 +77,6 @@ export default function Main(){
     const interstitialId = Platform.OS === 'ios' ? "662530228288377_662556258285774" : "662530228288377_662594761615257";
     const runAdTimer = () => {
       setTimeout(() => {
-      console.log('requesting ad');
       InterstitialAdManager.showAd(interstitialId)
       .then(didClose => {runAdTimer();})
       .catch(error => {runAdTimer();});
@@ -56,20 +85,19 @@ export default function Main(){
     runAdTimer();
     
     useEffect(() => {
-      async function fetchText() {
+      async function fetchText(image, text, setText) {
+          setText("DisplayActivityIndicator");
           var result = await TextRecognition.recognize(image.assets[0].uri);
-          setFromText(result[0])
+          setText(text + "" + result[0]);
       }
-      if(image){
-        fetchText();
-      }
+      if(imageTo) fetchText(imageTo, toText, setToText);
+      if(imageFrom) fetchText(imageFrom, fromText, setFromText);
       },
-      [image]
+      [imageTo, imageFrom]
     );
 
   return (
     <SafeAreaView style={styles.container}>
-      <ActivityIndicator size="large" color="black" />
       <LanguageButton
         buttonColor={'blue'}
         placeHolder={'Detect Language'}
@@ -84,8 +112,9 @@ export default function Main(){
             setLang={setFromLang}
             setIsEditingLang={setIsEditingFrom}
           />
-        ) : (
+        ) : fromText == "DisplayActivityIndicator" ? <ActivityIndicator size="large" color="gray" /> : (
           <View style={styles.inputView}>
+            { !isFocusedFrom && fromText != null && fromText != "" ? <View></View> :
             <TouchableOpacity
               style={styles.cameraButton}
               onPress={async () => {
@@ -96,13 +125,13 @@ export default function Main(){
                   [
                     {
                       text: "Select Photo",
-                      onPress: async() => image = await launchImageLibrary({}, setImage)
+                      onPress: async() => image = await launchImageLibrary({}, setImageFrom)
                     },
                     {
                       text: "Use Camera",
-                      onPress: async() => image = await launchCamera({}, setImage)
+                      onPress: async() => image = await launchCamera({}, setImageFrom)
                     },
-                    { style: "cancel", text: "cancel", onPress: () => console.log("cancel") }
+                    { style: "cancel", text: "cancel", onPress: () => {} }
                   ],
                   { cancelable: true },
                 );
@@ -113,6 +142,7 @@ export default function Main(){
                 source={require('../assets/cameraIcon.jpeg')}
               />
             </TouchableOpacity>
+            }
             <TextInput
               style={styles.textBox}
               value={fromText}
@@ -121,12 +151,24 @@ export default function Main(){
               placeholder="type here..."
               onChangeText={setFromText}
               blurOnSubmit={true}
+              onFocus={()=>{
+                  setIsFocusedFrom(true);
+              }}
+              onBlur={()=>{
+                setIsFocusedFrom(false);
+              }}
               onSubmitEditing={async () => {
+                var isConnected = await isConnectedToNetwork();
+                if(!isConnected){
+                  noNetworkConnected();
+                  return;
+                }
                 if (toLang == null){
                   noLanguageSelected();
                   return;
                 }
-
+                
+                setToText('DisplayActivityIndicator');
                 await translate(fromText, {
                   tld: fromLang == null ? '' : fromLang.code,
                   to: toLang.code,
@@ -135,7 +177,8 @@ export default function Main(){
                     setToText(value[0]);
                   })
                   .catch((e) => {
-                    setToText('sorry, error');
+                    errorOnInput();
+                    setToText('');
                   });
               }}
             />
@@ -156,7 +199,37 @@ export default function Main(){
             setLang={setToLang}
             setIsEditingLang={setIsEditingTo}
           />
-        ) : (
+        ) : toText == "DisplayActivityIndicator" ? <ActivityIndicator size="large" color="gray" /> : (
+          <View style={styles.inputView}>
+            { !isFocusedTo && toText != null && toText != "" ? <View></View> :
+            <TouchableOpacity
+              style={styles.cameraButton}
+              onPress={async () => {
+                var image = null;
+                Alert.alert(
+                  "Camera or Library",
+                  "Select Photos from Library or Take Photo with Camera?",
+                  [
+                    {
+                      text: "Select Photo",
+                      onPress: async() => image = await launchImageLibrary({}, setImageTo)
+                    },
+                    {
+                      text: "Use Camera",
+                      onPress: async() => image = await launchCamera({}, setImageTo)
+                    },
+                    { style: "cancel", text: "cancel", onPress: () => {} }
+                  ],
+                  { cancelable: false },
+                );
+              }}
+            >
+              <Image
+                style={styles.cameraIcon}
+                source={require('../assets/cameraIcon.jpeg')}
+              />
+            </TouchableOpacity>
+            }
           <TextInput
             style={styles.textBox}
             value={toText}
@@ -173,23 +246,30 @@ export default function Main(){
               setIsFocusedTo(false);
             }}
             onSubmitEditing={async () => {
-              if (toLang == null){
+              var isConnected = await isConnectedToNetwork();
+                if(!isConnected){
+                  noNetworkConnected();
+                  return;
+              }
+              if (toLang == null || fromLang == null){
                 noLanguageSelected();
                 return;
               }
-
-              await translate(fromText, {
-                tld: fromLang == null ? '' : fromLang.code,
-                to: toLang.code,
+              setFromText('DisplayActivityIndicator');
+              await translate(toText, {
+                tld: toLang == null ? '' : toLang.code,
+                to: fromLang.code,
               })
                 .then((value) => {
-                  setToText(value[0]);
+                  setFromText(value[0]);
                 })
                 .catch((e) => {
-                  setToText('sorry, error');
+                  errorOnInput();
+                  setFromText('');
                 });
             }}
           />
+          </View>
         )}
       </View>
     </SafeAreaView>
@@ -215,7 +295,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   cameraButton: {
-    flex: 1,
     width: 35,
     height: 40,
   },
