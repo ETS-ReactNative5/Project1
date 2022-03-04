@@ -7,14 +7,14 @@ import {
   TouchableOpacity,
 } from "react-native";
 
-export default function LanguagePicker({setLang, setIsEditingLang}) {
+export default function LanguagePicker({setLang}) {
 
   return (
     <ScrollView>
       {
-        availableLanguages.map((lang, index) => (
-          <TouchableOpacity key={index} style={styles.item} onPress={()=> {setLang(lang); setIsEditingLang(false);}}>
-            <Text style={styles.itemText}>{lang.title}</Text>
+        availableLanguages.map((currLang, index) => (
+          <TouchableOpacity key={index} style={styles.item} onPress={()=> { setLang({ isOpened: false, value: currLang}); }}>
+            <Text style={styles.itemText}>{currLang.title}</Text>
           </TouchableOpacity>
         ))
       }
@@ -32,6 +32,7 @@ const styles = StyleSheet.create({
 });
 
 const availableLanguages = [
+        { title: "Detect Language", code: ""},
         { title: "Afrikaans", code: "af" },
         { title: "Albanian", code: "sq" },
         { title: "Arabic - Algeria", code: "ar" },
@@ -47,8 +48,8 @@ const availableLanguages = [
         { title: "Croatian", code: "hr" },
         { title: "Czech", code: "cs" },
         { title: "Danish", code: "da" },
-        { title: "Dutch - Belgium", code: "en" },
-        { title: "English", code: "nl" },
+        { title: "Dutch - Belgium", code: "nl" },
+        { title: "English", code: "en" },
         { title: "Estonian", code: "et" },
         { title: "FYRO Macedonia", code: "mk" },
         { title: "Farsi - Persian", code: "fa" },
