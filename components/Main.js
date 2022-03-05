@@ -11,15 +11,13 @@ import {
 
 //community installed packages
 import translate from 'translate-google-api';
-import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
-import TextRecognition from 'react-native-text-recognition';
-import { InterstitialAdManager } from 'react-native-fbads';
+    //import { InterstitialAdManager } from 'react-native-fbads';
 
 //homemade components and classes
 import LanguagePicker from './LanguagePicker';
 import LanguageButton from './LanguageButton';
 import InputView from './InputView';
-import alerts from './Alerts';
+import alerts from './SimpleAlerts';
 
 
 const windowHeight = Dimensions.get('window').height;

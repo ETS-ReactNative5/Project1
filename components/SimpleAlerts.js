@@ -16,7 +16,7 @@ const simpleAlert = (title, message, hasCancel, buttonOne = null, buttonTwo = nu
     );
 }
 
-class Alerts{
+class SimpleAlerts{
     noNetworkConnected = () => {
         simpleAlert(
             'Error',
@@ -46,17 +46,7 @@ class Alerts{
             true,
         );
     }
-    selectCameraOrLibrary = async () => {
-        simpleAlert(
-            'Camera or Library',
-            'Select Photos from Library or Take Photo with Camera?',
-            true,
-            { text: "select photo", onPress: () => { return "library"; }},
-            { text: "use camera", onPress: () => { return "camera"; } },
-        )
-        return 'cancelled';
-    }
 }
 
-const alerts = new Alerts();
+const alerts = new SimpleAlerts();
 export default alerts;

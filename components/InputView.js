@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import React, {Component, useState, useEffect} from 'react';
 import {
   View,
   TouchableOpacity,
@@ -9,42 +9,67 @@ import {
 } from "react-native";
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import TextRecognition from 'react-native-text-recognition';
-import alerts from './Alerts';
 
 export default function InputView({initialPlaceHolder, text, setText, translateInput}) {
+
+    const [image, setImage] = useState();
+
+    const imageToText = async () => {
+      setText({ ...text, isLoading: true });
+      var recognitionResult = await TextRecognition.recognize(image.assets[0].uri);
+      setText({ ...text, value: recognitionResult[0] });
+    };
+
+    useEffect(()=>{
+      if(image) imageToText();
+    }, [image])
 
     return (
         <View style={styles.container}>
             { !text.isFocused && text.value != null && text.value != "" ? <View></View> :
+          <View style={{ flexDirection: 'row', justifyContent:'center', flex: !text.isFocused ? 2 : 1}}>
+                <TouchableOpacity
+                  style={styles.actionButton}
+                  onPress={async () => {
+                    Alert.alert(
+                      'Camera or Library',
+                      'Select Photos from Library or Take Photo with Camera?',
+                      [
+                        { text: "select photo", onPress: () => { launchImageLibrary({}, setImage); } },
+                        { text: "use camera", onPress: () => { launchCamera({}, setImage); } },
+                        { style: "cancel", text: "dismiss", onPress: () => { } },
+                      ],
+                      { cancelable: true },
+                    );
+                  }}
+                >
+                  <Image
+                    style={styles.actionIcon}
+                    source={require('../assets/icons/camera.png')}
+                  />
+                </TouchableOpacity>
             <TouchableOpacity
-              style={styles.cameraButton}
-              onPress={async () => {
-                const selection = await alerts.selectCameraOrLibrary();
-                var selectedImage = null;
-                switch (selection){
-                  default: return;
-                  case 'library':
-                    selectedImage = await launchImageLibrary({}, console.log('library'));
-                  case 'camera':
-                    selectedImage = await launchCamera({}, console.log('camera'));
-                }
-
-                if(selectedImage == null){
-                  alerts.errorWhileGettingImage();
-                  return;
-                }
-
-                setText({...text, isLoading: true});
-
-                var recognitionResult = await TextRecognition.recognize(selectedImage.assets[0].uri);
-                setText({ ...text, value: recognitionResult });
+              style={styles.actionButton}
+              onPress={() => {
+                setText({...text, value: ''});
               }}
             >
               <Image
-                style={styles.cameraIcon}
-                source={require('../assets/icons/camera.png')}
+                style={styles.actionIcon}
+                source={require('../assets/icons/undo.png')}
               />
             </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => {
+              }}
+            >
+              <Image
+                style={styles.actionIcon}
+                source={require('../assets/icons/clear.png')}
+              />
+            </TouchableOpacity>
+              </View>
             }
             <TextInput
               style={styles.textBox}
@@ -66,10 +91,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  cameraButton: {
-    flex:1,
+  actionButton: {
+    flex: 1,
   },
-  cameraIcon: {
+  actionIcon: {
     flex: 1,
     alignSelf: 'flex-start',
     resizeMode:'contain',
