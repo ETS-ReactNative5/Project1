@@ -27,7 +27,7 @@ export default function InputView({initialPlaceHolder, text, setText, translateI
     return (
         <View style={styles.container}>
             { !text.isFocused && text.value != null && text.value != "" ? <View></View> :
-          <View style={{ flexDirection: 'row', justifyContent:'center', flex: !text.isFocused ? 2 : 1}}>
+          <View style={{...styles.actionView, flex: !text.isFocused ? 2.5 : 0.7}}>
                 <TouchableOpacity
                   style={styles.actionButton}
                   onPress={async () => {
@@ -37,7 +37,7 @@ export default function InputView({initialPlaceHolder, text, setText, translateI
                       [
                         { text: "select photo", onPress: () => { launchImageLibrary({}, setImage); } },
                         { text: "use camera", onPress: () => { launchCamera({}, setImage); } },
-                        { style: "cancel", text: "dismiss", onPress: () => { } },
+                        { style: "cancel", text: "dismiss", onPress: () => {{}} },
                       ],
                       { cancelable: true },
                     );
@@ -91,12 +91,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  actionView: {
+    flexDirection: 'row',
+  },
   actionButton: {
-    flex: 1,
+    width: 50,
+    marginRight: 20,
   },
   actionIcon: {
     flex: 1,
-    alignSelf: 'flex-start',
+    alignSelf: 'center',
     resizeMode:'contain',
     aspectRatio: 1,
     opacity: 0.3,
