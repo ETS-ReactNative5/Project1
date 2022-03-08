@@ -1,5 +1,7 @@
+//react core packages
 import React, { Component, useState, useEffect } from 'react';
 import {
+  Keyboard,
   View,
   TouchableOpacity,
   StyleSheet,
@@ -7,8 +9,14 @@ import {
   Image,
   TextInput,
 } from "react-native";
+
+//community installed packages
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import TextRecognition from 'react-native-text-recognition';
+import NetInfo from "@react-native-community/netinfo";
+
+//homemade components and classes
+import alerts from './SimpleAlerts';
 
 export default function InputView({ initialPlaceHolder, text, setText, translateInput }) {
 
@@ -21,17 +29,18 @@ export default function InputView({ initialPlaceHolder, text, setText, translate
   };
 
   useEffect(() => {
-    if (image) imageToText();
+    if (image != null && image.didCancel != true) imageToText();
   }, [image])
 
   return (
     <View style={styles.container}>
       {!text.isFocused && text.value != "" ? <View></View> :
-        <View style={{ ...styles.actionView, flex: !text.isFocused ? 3 : 0.8 }}>
+        <View style={{ ...styles.actionView, flex: !text.isFocused ? 2 : 0.8 }}>
           <TouchableOpacity
             style={styles.actionButton}
             onPress={() => {
-              setText({ ...text, value: '' });
+              Keyboard.dismiss();
+              setText({ ...text, isFocused : false});
             }}
           >
             <Image
@@ -62,7 +71,7 @@ export default function InputView({ initialPlaceHolder, text, setText, translate
           <TouchableOpacity
             style={styles.actionButton}
             onPress={() => {
-              setText({ ...text, value: '' });
+              //undo function
             }}
           >
             <Image
@@ -73,6 +82,7 @@ export default function InputView({ initialPlaceHolder, text, setText, translate
           <TouchableOpacity
             style={styles.actionButton}
             onPress={() => {
+              setText({ ...text, value : '' });
             }}
           >
             <Image
@@ -92,7 +102,15 @@ export default function InputView({ initialPlaceHolder, text, setText, translate
         blurOnSubmit={true}
         onFocus={() => { setText({ ...text, isFocused: true }); }}
         onBlur={() => { setText({ ...text, isFocused: false }); }}
-        onSubmitEditing={() => { translateInput() }}
+        onSubmitEditing={() => { 
+          NetInfo.fetch().then(state => {
+            if(state.isConnected){
+              translateInput();
+            }else{
+              alerts.noNetworkConnected();
+            }
+          }); 
+        }}
       />
     </View>
   );

@@ -1,4 +1,4 @@
-//react and expo packages
+//react core packages
 import React, { Component, useEffect, useState } from 'react';
 import {
   SafeAreaView,
@@ -11,9 +11,11 @@ import {
 
 //community installed packages
 import translate from 'translate-google-api';
-    //import { InterstitialAdManager } from 'react-native-fbads';
+import { InterstitialAdManager } from 'react-native-fbads';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 //homemade components and classes
+import { FBADS_IOS_INTERSTITIAL, FBADS_ANDROID_INTERSTITIAL } from "@env";
 import LanguagePicker from './LanguagePicker';
 import LanguageButton from './LanguageButton';
 import InputView from './InputView';
@@ -31,6 +33,16 @@ const colorTheme = {
 };
 
 const loadingIndicator = <ActivityIndicator size="large" color={colorTheme.p3} />;
+
+const interstitialId = Platform.OS === 'ios' ? FBADS_IOS_INTERSTITIAL : FBADS_ANDROID_INTERSTITIAL;
+const runAdTimer = () => {
+  setTimeout(() => {
+    InterstitialAdManager.showAd(interstitialId)
+      .then(didClose => { runAdTimer(); })
+      .catch(error => { runAdTimer(); });
+  }, 120000); //120,000 == 2 minutes
+};
+runAdTimer();
 
 export default function Main() {
 
@@ -101,17 +113,6 @@ export default function Main() {
         });
       });
   };
-
-  /*const interstitialId = Platform.OS === 'ios' ? "662530228288377_662556258285774" : "662530228288377_662594761615257";
-  const runAdTimer = () => {
-    setTimeout(() => {
-    InterstitialAdManager.showAd(interstitialId)
-    .then(didClose => {runAdTimer();})
-    .catch(error => {runAdTimer();});
-    }, 120000); //2 minutes
-  };
-  runAdTimer();*/
-
 
   return (
     <SafeAreaView style={styles.container}>
