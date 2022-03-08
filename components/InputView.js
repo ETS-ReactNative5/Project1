@@ -30,7 +30,7 @@ export default function InputView({ initialPlaceHolder, text, setText, translate
 
   useEffect(() => {
     if (image != null && image.didCancel != true) imageToText();
-  }, [image])
+  }, [image]);
 
   return (
     <View style={styles.container}>
@@ -66,17 +66,6 @@ export default function InputView({ initialPlaceHolder, text, setText, translate
             <Image
               style={styles.actionIcon}
               source={require('../assets/icons/camera.png')}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => {
-              //undo function
-            }}
-          >
-            <Image
-              style={styles.actionIcon}
-              source={require('../assets/icons/undo.png')}
             />
           </TouchableOpacity>
           <TouchableOpacity

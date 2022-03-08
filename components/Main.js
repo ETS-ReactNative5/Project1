@@ -66,21 +66,9 @@ export default function Main() {
     value: { title: "French - Canada", code: "fr" }
   });
 
-  const isConnectedToNetwork = async () => {
-    return true;
-  }
-
   const transA = () => translateInput(textA, langA, langB, setTextB);
   const transB = () => translateInput(textB, langB, langA, setTextA);
-
   const translateInput = async (inputText, inputLang, outputLang, setOutputText) => {
-    await isConnectedToNetwork().then((isConnected) => {
-      if(!isConnected){
-        alerts.noNetworkConnected();
-        return;
-      }
-    });
-
     if (outputLang.value.code == "") {
       alerts.noLanguageSelected();
       return;
@@ -113,6 +101,33 @@ export default function Main() {
         });
       });
   };
+
+  const saveLangsToStorage = async () => {
+    try {
+      await AsyncStorage.setItem('@langA', JSON.stringify(langA));
+      await AsyncStorage.setItem('@langB', JSON.stringify(langB));
+    } catch (e) { }
+  };
+
+  const getLangsFromStorage = async () => {
+    try {
+      const langAStorage = await AsyncStorage.getItem('@langA');
+      const langBStorage = await AsyncStorage.getItem('@langB');
+      if (langAStorage != null && langBStorage != null) {
+        setLangA(JSON.parse(langAStorage));
+        setLangB(JSON.parse(langBStorage));
+      }
+    } catch (e) {}
+  }
+
+  useEffect(()=>{
+    getLangsFromStorage();
+  },[]);
+
+  useEffect(()=>{
+    saveLangsToStorage();
+    },[langA, langB]
+  );
 
   return (
     <SafeAreaView style={styles.container}>
