@@ -85,7 +85,6 @@ export default function Main() {
       to: outputLang.value.code,
     })
       .then((translationValue) => {
-        console.log(translationValue);
         setOutputText({
           isLoading: false,
           isFocused: false,
